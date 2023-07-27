@@ -1,4 +1,4 @@
-import ora from 'ora';
+declare const ora: any;
 declare class CustomError extends Error {
     code: string;
     message: string;

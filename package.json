@@ -1,6 +1,6 @@
 {
   "name": "nextension",
-  "version": "1.0.0",
+  "version": "1.0.92",
   "description": "A CLI tool to build Next.js applications as Chrome extensions",
   "main": "dist/build.js",
   "bin": {
@@ -11,7 +11,13 @@
     "build": "tsc",
     "prepublishOnly": "npm run build"
   },
-  "keywords": ["nextjs", "chrome", "extension", "build", "cli"],
+  "keywords": [
+    "nextjs",
+    "chrome",
+    "extension",
+    "build",
+    "cli"
+  ],
   "author": "BankkRoll <https://github.com/BankkRoll>",
   "license": "MIT",
   "repository": {
@@ -28,6 +34,7 @@
   "devDependencies": {
     "@types/fs-extra": "^11.0.1",
     "@types/inquirer": "^9.0.3",
+    "@types/js-beautify": "^1.13.3",
     "@types/node": "^20.4.5",
     "@types/ora": "^3.2.0",
     "@types/yargs": "^17.0.5",
@@ -41,8 +48,8 @@
     "fs-extra": "^11.1.1",
     "glob": "^10.3.3",
     "inquirer": "^8.2.0",
+    "js-beautify": "^1.13.3",
     "ora": "^6.3.1",
-    "path": "^0.12.7",
-    "prettier": "^3.0.0"
+    "path": "^0.12.7"
   }
 }

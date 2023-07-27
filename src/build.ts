@@ -3,7 +3,7 @@ import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import * as path from 'path';
 import { exec } from 'child_process';
-import prettier from 'prettier';
+import { html as beautifyHTML } from 'js-beautify';
 import inquirer from 'inquirer';
 import { log, createSpinner, stopSpinner, createError } from './utils';
 
@@ -57,13 +57,28 @@ async function renameNextDirectory() {
 }
 
 /**
- * Formats HTML code with Prettier.
+ * Formats HTML code with js-beautify.
  * @param html {string}
  * @return {Promise<string>}
  */
 async function formatHTML(html: string): Promise<string> {
-    return prettier.format(html, { parser: 'html' });
+    return beautifyHTML(html, {
+        indent_size: 2, // Number of spaces for indentation
+        wrap_line_length: 120, // Maximum characters per line, adjust as needed
+        end_with_newline: true, // Add a newline character at the end of the file
+        indent_inner_html: true, // Indent the content of elements
+        preserve_newlines: true, // Preserve existing line breaks
+        wrap_attributes_indent_size: 2, // Indentation for attributes on a new line
+        extra_liners: [], // Tags that should have an extra newline after them (none in this case)
+        content_unformatted: ['pre', 'code'], // Tags with content that should be preserved (e.g., <pre> and <code>)
+        unformatted: [], // Tags that should not be reformatted (none in this case)
+        indent_handlebars: true, // Indent Handlebars expressions
+        indent_scripts: 'keep', // Indent content inside <script> tags ('keep' preserves existing indentation)
+        max_preserve_newlines: 1, // Maximum number of preserved newlines
+        indent_with_tabs: false, // Indent with spaces, not tabs
+    });
 }
+
 
 /**
  * Updates HTML files in the nextension directory.

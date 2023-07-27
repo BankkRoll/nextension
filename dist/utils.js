@@ -1,38 +1,54 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.pressAnyKeyToContinue = exports.clearConsole = exports.stopSpinner = exports.createSpinner = exports.log = exports.createError = exports.CustomError = void 0;
-const chalk_1 = __importDefault(require("chalk"));
-const ora_1 = __importDefault(require("ora"));
-const readline_1 = __importDefault(require("readline"));
-class CustomError extends Error {
-    constructor(code, message) {
-        super(message);
-        this.code = code;
-        this.message = message;
+var chalk = require('chalk');
+var ora = require('ora');
+var readline = require('readline');
+var CustomError = (function (_super) {
+    __extends(CustomError, _super);
+    function CustomError(code, message) {
+        var _this = _super.call(this, message) || this;
+        _this.code = code;
+        _this.message = message;
+        return _this;
     }
-}
+    return CustomError;
+}(Error));
 exports.CustomError = CustomError;
 function createError(code, message) {
     return new CustomError(code, message);
 }
 exports.createError = createError;
-function log(message, type = 'info', spinner) {
-    const timestamp = new Date().toISOString();
+function log(message, type, spinner) {
+    if (type === void 0) { type = 'info'; }
+    var timestamp = new Date().toISOString();
     switch (type) {
         case 'info':
-            console.log(chalk_1.default.blue(`[${timestamp} INFO]: ${message}`));
+            console.log(chalk.blue("[".concat(timestamp, " INFO]: ").concat(message)));
             break;
         case 'error':
-            console.error(chalk_1.default.red(`[${timestamp} ERROR]: ${message}`));
+            console.error(chalk.red("[".concat(timestamp, " ERROR]: ").concat(message)));
             break;
         case 'warning':
-            console.warn(chalk_1.default.yellow(`[${timestamp} WARNING]: ${message}`));
+            console.warn(chalk.yellow("[".concat(timestamp, " WARNING]: ").concat(message)));
             break;
         case 'success':
-            console.log(chalk_1.default.green(`[${timestamp} SUCCESS]: ${message}`));
+            console.log(chalk.green("[".concat(timestamp, " SUCCESS]: ").concat(message)));
             break;
         case 'spinner':
             if (spinner) {
@@ -43,18 +59,18 @@ function log(message, type = 'info', spinner) {
 }
 exports.log = log;
 function createSpinner(text) {
-    return (0, ora_1.default)({ text, color: 'blue' }).start();
+    return ora({ text: text, color: 'blue' }).start();
 }
 exports.createSpinner = createSpinner;
 function stopSpinner(spinner, text, type) {
     if (type === 'success') {
-        spinner.succeed(chalk_1.default.green(text));
+        spinner.succeed(chalk.green(text));
     }
     else if (type === 'fail') {
-        spinner.fail(chalk_1.default.red(text));
+        spinner.fail(chalk.red(text));
     }
     else {
-        spinner.info(chalk_1.default.blue(text));
+        spinner.info(chalk.blue(text));
     }
 }
 exports.stopSpinner = stopSpinner;
@@ -62,13 +78,14 @@ function clearConsole() {
     process.stdout.write('\x1Bc');
 }
 exports.clearConsole = clearConsole;
-function pressAnyKeyToContinue(prompt = 'Press any key to continue...') {
-    return new Promise(resolve => {
-        const rl = readline_1.default.createInterface({
+function pressAnyKeyToContinue(prompt) {
+    if (prompt === void 0) { prompt = 'Press any key to continue...'; }
+    return new Promise(function (resolve) {
+        var rl = readline.createInterface({
             input: process.stdin,
             output: process.stdout
         });
-        rl.question(prompt, () => {
+        rl.question(prompt, function () {
             rl.close();
             resolve();
         });

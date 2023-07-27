@@ -1,6 +1,6 @@
-import chalk from 'chalk';
-import ora from 'ora';
-import readline from 'readline';
+const chalk = require('chalk');
+const ora = require('ora');
+const readline = require('readline');
 
 class CustomError extends Error {
     constructor(public code: string, public message: string) {
