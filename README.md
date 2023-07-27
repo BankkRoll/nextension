@@ -1,4 +1,9 @@
-**Nextension - An Advanced CLI Tool for Building Next.js Applications as Chrome Extensions**
+# Nextension
+### An Advanced CLI Tool for Building Next.js Applications as Chrome Extensions
+
+<p align="center">
+  <img src="https://i.giphy.com/media/TLeLKUdIc1tvAxb7ab/giphy.webp" alt="Nextension Logo" style="display: block; margin: auto; width: 60%; max-width: 80%;" />
+</p>
 
 ## Table of Contents
 
@@ -12,11 +17,12 @@
 8. [Contributing](#contributing)
 9. [License](#license)
 
-## 1. Introduction
+
+## Introduction
 
 Nextension is an advanced CLI (Command Line Interface) tool designed for developers proficient in Next.js to easily convert their Next.js applications into fully functional Chrome extensions. With Nextension, developers can rapidly create Chrome extensions from their Next.js projects, enabling them to leverage the power of Next.js for building progressive web applications and taking advantage of the Chrome extension ecosystem for distribution.
 
-## 2. Installation
+## Installation
 
 To install Nextension, ensure that you have Node.js version 14.0.0 or higher installed on your system. Then, you can install Nextension globally using npm:
 
@@ -24,7 +30,7 @@ To install Nextension, ensure that you have Node.js version 14.0.0 or higher ins
 npm install -g nextension
 ```
 
-## 3. Usage
+## Usage
 
 Using Nextension is straightforward. Once installed, you can run the `nextension` command in your Next.js project's root directory:
 
@@ -34,7 +40,7 @@ nextension
 
 Nextension will automatically build your Next.js application and generate the necessary files to create a Chrome extension in the `nextension` directory.
 
-## 4. Features
+## Features
 
 Nextension comes packed with several advanced features to streamline the process of building Chrome extensions from Next.js projects:
 
@@ -48,11 +54,11 @@ Nextension comes packed with several advanced features to streamline the process
 
 - **Dynamic Imports for ESM Compatibility:** Nextension uses dynamic imports for compatibility with ECMAScript Modules (ESM), enabling seamless integration with modern JavaScript projects.
 
-## 5. Customization
+## Customization
 
 Nextension allows you to customize various aspects of the Chrome extension generation process to suit your specific requirements. You can modify the behavior of Nextension through configuration options.
 
-## 6. Configuration
+## Configuration
 
 Nextension supports a configuration file named `nextension.config.js` in your project's root directory. By creating this file, you gain granular control over the Chrome extension's output, enabling you to tailor it precisely to your needs.
 
@@ -121,4 +127,4 @@ Nextension is open-source software released under the [MIT License](https://exam
 
 ---
 
-Thank you for choosing Nextension! We hope you find it a valuable tool for building powerful Chrome extensions with the ease and flexibility of Next.js. Happy coding! If you have any questions or feedback, please reach out to us on [GitHub](https://github.com/BankkRoll/nextension).
+Thank you for choosing Nextension! We hope you find it a valuable tool for building powerful Chrome extensions with the ease and flexibility of Next.js. Happy coding!
