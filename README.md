@@ -22,20 +22,12 @@
 
 Nextension is an advanced CLI (Command Line Interface) tool designed for developers proficient in Next.js to easily convert their Next.js applications into fully functional Chrome extensions. With Nextension, developers can rapidly create Chrome extensions from their Next.js projects, enabling them to leverage the power of Next.js for building progressive web applications and taking advantage of the Chrome extension ecosystem for distribution.
 
-## Installation
+## Installation & Usage
 
-To install Nextension, ensure that you have Node.js version 14.0.0 or higher installed on your system. Then, you can install Nextension globally using npm:
-
-```shell
-npm install -g nextension
-```
-
-## Usage
-
-Using Nextension is straightforward. Once installed, you can run the `nextension` command in your Next.js project's root directory:
+To install Nextension, ensure that you have Node.js version 14.0.0 or higher installed on your system. Then, you can install & run Nextension globally using this command:
 
 ```shell
-nextension
+npx nextension
 ```
 
 Nextension will automatically build your Next.js application and generate the necessary files to create a Chrome extension in the `nextension` directory.
@@ -89,7 +81,7 @@ To get started with contributing to Nextension, please follow these steps:
 **Clone the Repository:** Next, clone your forked repository to your local machine using the following command:
 
 ```shell
-   git clone https://github.com/YourUsername/nextension.git
+   git clone https://github.com/BankkRoll/nextension.git
 ```
 
 3.
@@ -119,7 +111,7 @@ To get started with contributing to Nextension, please follow these steps:
 7.
 **Create a Pull Request:** Now it's time to create a pull request from your branch to the main Nextension repository. Navigate to your GitHub repository and click on the "New pull request" button. Provide a clear and detailed description of your changes, and submit the pull request.
 
-We greatly appreciate your contributions, and together, we can make Nextension even better for all developers! If you have any questions or need assistance with the contribution process, feel free to reach out to us on ```[GitHub](https://github.com/nextension)```.
+We greatly appreciate your contributions, and together, we can make Nextension even better for all developers! If you have any questions or need assistance with the contribution process, feel free to reach out to us on ```[GitHub](https://github.com/BankkRoll/nextension)```.
 
 ## License
 
