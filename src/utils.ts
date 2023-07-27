@@ -1,6 +1,22 @@
-const chalk = require('chalk');
-const ora = require('ora');
-const readline = require('readline');
+//@ts-ignore
+let chalk: any;
+//@ts-ignore
+let ora: any;
+//@ts-ignore
+import readline from 'readline';
+
+async function initialize() {
+    const importPromises = [
+        import('chalk').then((chalkModule) => chalk = chalkModule.default),
+        import('ora').then((oraModule) => ora = oraModule.default),
+    ];
+
+    try {
+        await Promise.all(importPromises);
+    } catch (error) {
+        console.error('Failed to import modules:', error);
+    }
+}
 
 class CustomError extends Error {
     constructor(public code: string, public message: string) {
@@ -69,4 +85,4 @@ function pressAnyKeyToContinue(prompt = 'Press any key to continue...'): Promise
     });
 }
 
-export { CustomError, createError, log, createSpinner, stopSpinner, clearConsole, pressAnyKeyToContinue };
+export { CustomError, createError, log, createSpinner, stopSpinner, clearConsole, pressAnyKeyToContinue, initialize };

@@ -1,4 +1,3 @@
-// src/build.ts
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import * as path from 'path';
@@ -33,7 +32,7 @@ async function runNextBuildAndExport() {
         log('Running `next build`...', 'info');
         await executeCommand('next build');
         log('Running `next export`...', 'info');
-        await executeCommand('next export -o nextension');
+        await executeCommand('next export -o ../nextension');
     } catch (error) {
         log('Error during Next.js build/export:', 'error');
         throw error;
