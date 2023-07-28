@@ -1,6 +1,8 @@
 # Nextension
 ### An Advanced CLI Tool for Building Next.js Applications as Chrome Extensions
 
+![imageedit_16_4061035640](https://github.com/BankkRoll/nextension/assets/106103625/cf13bdf8-300f-485d-bfa9-2aa2a801c2a0)
+
 ## Table of Contents
 
 1. [Introduction](#introduction)
