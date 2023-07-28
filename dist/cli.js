@@ -20,6 +20,13 @@ const build_1 = require("./build");
     }
     (0, build_1.build)();
 })
+    .command('*', 'default', () => { }, (argv) => {
+    if (argv.verbose) {
+        console.log('Verbose mode is on.');
+    }
+    (0, build_1.build)();
+})
+    .demandCommand(0, 0)
     .help()
     .alias('help', 'h')
     .argv;

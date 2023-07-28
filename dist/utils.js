@@ -36,14 +36,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.initialize = exports.pressAnyKeyToContinue = exports.clearConsole = exports.stopSpinner = exports.createSpinner = exports.log = exports.createError = exports.CustomError = void 0;
-let chalk;
-let ora;
+let kleur;
+let cliSpinners;
 const readline_1 = __importDefault(require("readline"));
 function initialize() {
     return __awaiter(this, void 0, void 0, function* () {
         const importPromises = [
-            Promise.resolve().then(() => __importStar(require('chalk'))).then((chalkModule) => chalk = chalkModule.default),
-            Promise.resolve().then(() => __importStar(require('ora'))).then((oraModule) => ora = oraModule.default),
+            Promise.resolve().then(() => __importStar(require('kleur'))).then((kleurModule) => kleur = kleurModule),
+            Promise.resolve().then(() => __importStar(require('cli-spinners'))).then((cliSpinnersModule) => cliSpinners = cliSpinnersModule),
         ];
         try {
             yield Promise.all(importPromises);
@@ -66,43 +66,41 @@ function createError(code, message) {
     return new CustomError(code, message);
 }
 exports.createError = createError;
+let frameIndex = 0;
 function log(message, type = 'info', spinner) {
-    const timestamp = new Date().toISOString();
+    const timestamp = new Date().toLocaleTimeString();
+    const largeSpinnerFrame = cliSpinners.dots.frames[frameIndex] + ' ' + cliSpinners.dots.frames[frameIndex] + ' ' + cliSpinners.dots.frames[frameIndex];
     switch (type) {
         case 'info':
-            console.log(chalk.blue(`[${timestamp} INFO]: ${message}`));
+            console.log(kleur.blue(`[${timestamp} INFO]: ${message}`));
             break;
         case 'error':
-            console.error(chalk.red(`[${timestamp} ERROR]: ${message}`));
+            console.error(kleur.red(`[${timestamp} ERROR]: ${message}`));
             break;
         case 'warning':
-            console.warn(chalk.yellow(`[${timestamp} WARNING]: ${message}`));
+            console.warn(kleur.yellow(`[${timestamp} WARNING]: ${message}`));
             break;
         case 'success':
-            console.log(chalk.green(`[${timestamp} SUCCESS]: ${message}`));
+            console.log(kleur.green(`[${timestamp} SUCCESS]: ${message}`));
+            break;
+        case 'highlight':
+            console.log(kleur.magenta().bold(`[${timestamp} LOG]: ${message}`));
             break;
         case 'spinner':
-            if (spinner) {
-                spinner.text = message;
-            }
+            process.stdout.write(`\r${kleur.cyan().bold(message)} ${largeSpinnerFrame}`);
+            frameIndex = (frameIndex + 1) % cliSpinners.dots.frames.length;
             break;
     }
 }
 exports.log = log;
 function createSpinner(text) {
-    return ora({ text, color: 'blue' }).start();
+    return setInterval(() => {
+        log(kleur.magenta().bold(text), 'spinner');
+    }, cliSpinners.dots.interval);
 }
 exports.createSpinner = createSpinner;
-function stopSpinner(spinner, text, type) {
-    if (type === 'success') {
-        spinner.succeed(chalk.green(text));
-    }
-    else if (type === 'fail') {
-        spinner.fail(chalk.red(text));
-    }
-    else {
-        spinner.info(chalk.blue(text));
-    }
+function stopSpinner(spinner) {
+    clearInterval(spinner);
 }
 exports.stopSpinner = stopSpinner;
 function clearConsole() {

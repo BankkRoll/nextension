@@ -4,24 +4,68 @@ import * as path from 'path';
 import { exec } from 'child_process';
 import { html as beautifyHTML } from 'js-beautify';
 import inquirer from 'inquirer';
-import { log, createSpinner, stopSpinner, createError } from './utils';
+import { log, createSpinner, stopSpinner, createError, initialize } from './utils';
 
+
+/**
+ * Executes a command in the package.json file and returns the output.
+ */
 async function executeCommand(command: string) {
-    const spinner = createSpinner(`Running command: ${command}`);
+    const yarnLockExists = await fs.pathExists('yarn.lock');
+    const pnpmLockExists = await fs.pathExists('pnpm-lock.yaml');
+    let packageManagerCommand = 'npm run';
+
+    if (yarnLockExists) {
+        packageManagerCommand = 'yarn';
+    } else if (pnpmLockExists) {
+        packageManagerCommand = 'pnpm';
+    }
+
+    const fullCommand = `${packageManagerCommand} ${command}`;
+    const spinner = createSpinner(`Initiating protocol: ${fullCommand}`);
     return new Promise((resolve, reject) => {
-        exec(command, (error, stdout, stderr) => {
+        exec(fullCommand, {timeout: 60000}, (error, stdout, stderr) => {
             if (error) {
-                log(`Error during command execution '${command}': ${error}`, 'error', spinner); 
-                reject(createError('CMD_EXEC_ERROR', `Error during command execution '${command}': ${error}`));
+                log(`Error during command execution '${fullCommand}': ${error}`, 'error', spinner);
+                log(`stdout: ${stdout}`, 'info', spinner);
+                log(`stderr: ${stderr}`, 'info', spinner);
+                log(`Error code: ${error.code}`, 'info', spinner);
+                log(`Error signal: ${error.signal}`, 'info', spinner);
+                log(`Error message: ${error.message}`, 'info', spinner);
+                reject(createError('CMD_EXEC_ERROR', `Error during command execution '${fullCommand}': ${error}`));
             } else if (stderr) {
-                log(`stderr during command execution '${command}': ${stderr}`, 'error', spinner); 
-                reject(createError('CMD_EXEC_STDERR', `stderr during command execution '${command}': ${stderr}`));
+                log(`stderr during command execution '${fullCommand}': ${stderr}`, 'error', spinner);
+                reject(createError('CMD_EXEC_STDERR', `stderr during command execution '${fullCommand}': ${stderr}`));
             } else {
-                stopSpinner(spinner, `Finished running command: ${command}`, 'success');
+                stopSpinner(spinner);
                 resolve(stdout);
             }
         });
     });
+}
+
+/**
+ * Creates a build and export script in the package.json file.
+ */
+async function ensureScriptsInPackageJson() {
+    const packageJsonPath = path.resolve('package.json');
+    const packageJson = await fs.readJson(packageJsonPath);
+
+    if (!packageJson.scripts) {
+        packageJson.scripts = {};
+    }
+
+    if (!packageJson.scripts.build) {
+        packageJson.scripts.build = 'next build';
+        log('Adding `build` script to package.json', 'highlight');
+    }
+
+    if (!packageJson.scripts.export) {
+        packageJson.scripts.export = 'next export';
+        log('Adding `export` script to package.json', 'highlight');
+    }
+
+    await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
 }
 
 /**
@@ -30,11 +74,23 @@ async function executeCommand(command: string) {
 async function runNextBuildAndExport() {
     try {
         log('Running `next build`...', 'info');
-        await executeCommand('next build');
-        log('Running `next export`...', 'info');
-        await executeCommand('next export -o ../nextension');
+        await executeCommand('build');
+
+        const outPath = path.join(process.cwd(), 'out');
+        const exists = await fs.pathExists(outPath);
+        log(`\nout directory exists: ${exists}`, 'info');
+
+        // Move or rename the 'out' directory to 'nextension' after the build is complete
+        await fs.move(outPath, path.join(process.cwd(), 'nextension'));
+        log(`Moved 'out' directory to 'nextension'`, 'highlight');
     } catch (error) {
-        log('Error during Next.js build/export:', 'error');
+        if (error instanceof Error) {
+            log('Error during Next.js build/export:', 'error');
+            log(`Error stack: ${error.stack}`, 'error');
+        } else {
+            log('Error during Next.js build/export:', 'error');
+            log(`Error: ${error}`, 'error');
+        }
         throw error;
     }
 }
@@ -43,14 +99,14 @@ async function runNextBuildAndExport() {
  * Renames the _next directory to next.
  */
 async function renameNextDirectory() {
-    const oldPath = path.resolve('nextension', '_next');
-    const newPath = path.resolve('nextension', 'next');
+    const oldPath = path.resolve(process.cwd(), 'nextension', '_next');
+    const newPath = path.resolve(process.cwd(), 'nextension', 'next');
 
     try {
         await fs.rename(oldPath, newPath);
-        log(`Successfully renamed directory from ${oldPath} to ${newPath}`, 'success');
+        log(`Renamed directory from ${path.basename(oldPath)} to ${path.basename(newPath)}`, 'highlight');
     } catch (error) {
-        log(`Error renaming directory from ${oldPath} to ${newPath}:`, 'error');
+        log(`Error renaming directory from ${path.basename(oldPath)} to ${path.basename(newPath)}:`, 'error');
         throw error;
     }
 }
@@ -62,22 +118,21 @@ async function renameNextDirectory() {
  */
 async function formatHTML(html: string): Promise<string> {
     return beautifyHTML(html, {
-        indent_size: 2, // Number of spaces for indentation
-        wrap_line_length: 120, // Maximum characters per line, adjust as needed
-        end_with_newline: true, // Add a newline character at the end of the file
-        indent_inner_html: true, // Indent the content of elements
-        preserve_newlines: true, // Preserve existing line breaks
-        wrap_attributes_indent_size: 2, // Indentation for attributes on a new line
-        extra_liners: [], // Tags that should have an extra newline after them (none in this case)
-        content_unformatted: ['pre', 'code'], // Tags with content that should be preserved (e.g., <pre> and <code>)
-        unformatted: [], // Tags that should not be reformatted (none in this case)
-        indent_handlebars: true, // Indent Handlebars expressions
-        indent_scripts: 'keep', // Indent content inside <script> tags ('keep' preserves existing indentation)
-        max_preserve_newlines: 1, // Maximum number of preserved newlines
-        indent_with_tabs: false, // Indent with spaces, not tabs
+        indent_size: 2,
+        wrap_line_length: 120,
+        end_with_newline: true,
+        indent_inner_html: true,
+        preserve_newlines: true,
+        wrap_attributes_indent_size: 2,
+        extra_liners: [],
+        content_unformatted: ['pre', 'code'],
+        unformatted: [],
+        indent_handlebars: true,
+        indent_scripts: 'keep',
+        max_preserve_newlines: 1,
+        indent_with_tabs: false,
     });
 }
-
 
 /**
  * Updates HTML files in the nextension directory.
@@ -93,7 +148,7 @@ async function updateHtmlFiles() {
             content = await formatHTML(content);
             await fs.writeFile(file, content, 'utf8');
         }
-        log('Successfully updated HTML files', 'success');
+        log('Updated HTML files', 'highlight');
     } catch (error) {
         log('Error updating HTML files:', 'error');
         throw error;
@@ -108,8 +163,13 @@ async function copyAssets() {
     const destPath = path.resolve('nextension', 'assets');
 
     try {
-        await fs.copy(srcPath, destPath);
-        log('Successfully copied assets', 'success');
+        // Check if the assets directory exists
+        if (await fs.pathExists(srcPath)) {
+            await fs.copy(srcPath, destPath);
+            log('Copied assets', 'highlight');
+        } else {
+            log('Assets directory does not exist, skipping copy operation', 'info');
+        }
     } catch (error) {
         log(`Error copying assets from ${srcPath} to ${destPath}:`, 'error');
         throw error;
@@ -121,7 +181,7 @@ async function copyAssets() {
  * If not present, prompts the user to generate a template.
  */
 async function checkManifest() {
-    const manifestPath = path.resolve('nextension', 'assets', 'manifest.json');
+    const manifestPath = path.resolve('nextension', 'manifest.json');
 
     try {
         const manifestExists = await fs.pathExists(manifestPath);
@@ -141,11 +201,14 @@ async function checkManifest() {
             }
         }
     } catch (error) {
-        log('Successfully checked manifest.json', 'success');
+        log('Error checking manifest.json', 'error');
         throw error;
     }
 }
 
+/**
+ * Generates the manifest.json file if it does not exist.
+ */
 async function generateManifest() {
     const assetsDir = path.resolve('public');
     const defaultPopupExists = await fs.pathExists(path.join(assetsDir, 'popup.html'));
@@ -197,32 +260,77 @@ async function generateManifest() {
             '48': 'icons/icon48.png',
             '128': 'icons/icon128.png',
         } : undefined,
-        // other fields with default values or empty objects/arrays as required
     };
 
     const manifestPath = path.resolve('nextension', 'assets', 'manifest.json');
 
     await fs.writeJson(manifestPath, manifestContent, { spaces: 2 });
-    log('Successfully generated manifest.json', 'success');
+    log('Generated manifest.json', 'highlight');
+}
+
+/**
+ * Organizes files into a clean directory structure.
+ */
+async function organizeFiles() {
+    const nextensionPath = path.resolve(process.cwd(), 'nextension');
+    const directories = {
+        '.js': 'scripts',
+        '.css': 'styles',
+        '.png': 'icons',
+        '.jpg': 'icons',
+        '.ico': 'icons',
+        '.svg': 'icons',
+        '.html': 'html'
+    };
+
+    for (const dir of Object.values(directories)) {
+        await fs.mkdir(path.join(nextensionPath, dir), { recursive: true });
+    }
+
+    // Move files to appropriate directories
+    for (const [ext, dir] of Object.entries(directories)) {
+        const files = glob.sync(path.join(nextensionPath, `*${ext}`));
+        for (const file of files) {
+            // Special handling for popup related files
+            if (path.basename(file).startsWith('popup')) {
+                await fs.move(file, path.join(nextensionPath, 'popup', path.basename(file)));
+            } else {
+                await fs.move(file, path.join(nextensionPath, dir, path.basename(file)));
+            }
+        }
+    }
+    log('Organized files', 'highlight');
 }
 
 /**
  * Main function.
- * Runs the build and export commands, renames the directory, updates HTML files, copies assets, and checks for manifest.json.
+ * Runs the build and export commands, renames the directory, updates HTML files, copies assets, checks for manifest.json, and organizes files.
  */
 export async function build() {
     try {
+        await initialize();
+        log('Initiating build process...', 'highlight');
+        await ensureScriptsInPackageJson();
+        log('\u2714 Validated presence of required scripts in package.json', 'success');
         await runNextBuildAndExport();
+        log('\u2714 Next.js build and export process completed', 'success');
         await renameNextDirectory();
+        log('\u2714 Renamed _next directory to next for compatibility', 'success');
         await updateHtmlFiles();
+        log('\u2714 HTML files have been updated to reference new directory structure', 'success');
         await copyAssets();
+        log('\u2714 Assets have been copied to the target directory', 'success');
         await checkManifest();
-        log('Build completed successfully', 'success');
+        log('\u2714 Manifest.json file checked, and generated if not present', 'success');
+        await organizeFiles();
+        log('\u2714 Files organized into a cleaner directory structure', 'success');
+        log('\u2714 Build process completed successfully', 'success');
     } catch (error) {
         log('An error occurred during the build process:', 'error');
         process.exit(1);
     }
 }
+
 
 /**
  * Handles any unhandled promise rejections.

@@ -45,49 +45,92 @@ const inquirer_1 = __importDefault(require("inquirer"));
 const utils_1 = require("./utils");
 function executeCommand(command) {
     return __awaiter(this, void 0, void 0, function* () {
-        const spinner = (0, utils_1.createSpinner)(`Running command: ${command}`);
+        const yarnLockExists = yield fs.pathExists('yarn.lock');
+        const pnpmLockExists = yield fs.pathExists('pnpm-lock.yaml');
+        let packageManagerCommand = 'npm run';
+        if (yarnLockExists) {
+            packageManagerCommand = 'yarn';
+        }
+        else if (pnpmLockExists) {
+            packageManagerCommand = 'pnpm';
+        }
+        const fullCommand = `${packageManagerCommand} ${command}`;
+        const spinner = (0, utils_1.createSpinner)(`Initiating protocol: ${fullCommand}`);
         return new Promise((resolve, reject) => {
-            (0, child_process_1.exec)(command, (error, stdout, stderr) => {
+            (0, child_process_1.exec)(fullCommand, { timeout: 60000 }, (error, stdout, stderr) => {
                 if (error) {
-                    (0, utils_1.log)(`Error during command execution '${command}': ${error}`, 'error', spinner);
-                    reject((0, utils_1.createError)('CMD_EXEC_ERROR', `Error during command execution '${command}': ${error}`));
+                    (0, utils_1.log)(`Error during command execution '${fullCommand}': ${error}`, 'error', spinner);
+                    (0, utils_1.log)(`stdout: ${stdout}`, 'info', spinner);
+                    (0, utils_1.log)(`stderr: ${stderr}`, 'info', spinner);
+                    (0, utils_1.log)(`Error code: ${error.code}`, 'info', spinner);
+                    (0, utils_1.log)(`Error signal: ${error.signal}`, 'info', spinner);
+                    (0, utils_1.log)(`Error message: ${error.message}`, 'info', spinner);
+                    reject((0, utils_1.createError)('CMD_EXEC_ERROR', `Error during command execution '${fullCommand}': ${error}`));
                 }
                 else if (stderr) {
-                    (0, utils_1.log)(`stderr during command execution '${command}': ${stderr}`, 'error', spinner);
-                    reject((0, utils_1.createError)('CMD_EXEC_STDERR', `stderr during command execution '${command}': ${stderr}`));
+                    (0, utils_1.log)(`stderr during command execution '${fullCommand}': ${stderr}`, 'error', spinner);
+                    reject((0, utils_1.createError)('CMD_EXEC_STDERR', `stderr during command execution '${fullCommand}': ${stderr}`));
                 }
                 else {
-                    (0, utils_1.stopSpinner)(spinner, `Finished running command: ${command}`, 'success');
+                    (0, utils_1.stopSpinner)(spinner);
                     resolve(stdout);
                 }
             });
         });
     });
 }
+function ensureScriptsInPackageJson() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const packageJsonPath = path.resolve('package.json');
+        const packageJson = yield fs.readJson(packageJsonPath);
+        if (!packageJson.scripts) {
+            packageJson.scripts = {};
+        }
+        if (!packageJson.scripts.build) {
+            packageJson.scripts.build = 'next build';
+            (0, utils_1.log)('Adding `build` script to package.json', 'highlight');
+        }
+        if (!packageJson.scripts.export) {
+            packageJson.scripts.export = 'next export';
+            (0, utils_1.log)('Adding `export` script to package.json', 'highlight');
+        }
+        yield fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
+    });
+}
 function runNextBuildAndExport() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             (0, utils_1.log)('Running `next build`...', 'info');
-            yield executeCommand('next build');
-            (0, utils_1.log)('Running `next export`...', 'info');
-            yield executeCommand('next export -o ../nextension');
+            yield executeCommand('build');
+            const outPath = path.join(process.cwd(), 'out');
+            const exists = yield fs.pathExists(outPath);
+            (0, utils_1.log)(`\nout directory exists: ${exists}`, 'info');
+            yield fs.move(outPath, path.join(process.cwd(), 'nextension'));
+            (0, utils_1.log)(`Moved 'out' directory to 'nextension'`, 'highlight');
         }
         catch (error) {
-            (0, utils_1.log)('Error during Next.js build/export:', 'error');
+            if (error instanceof Error) {
+                (0, utils_1.log)('Error during Next.js build/export:', 'error');
+                (0, utils_1.log)(`Error stack: ${error.stack}`, 'error');
+            }
+            else {
+                (0, utils_1.log)('Error during Next.js build/export:', 'error');
+                (0, utils_1.log)(`Error: ${error}`, 'error');
+            }
             throw error;
         }
     });
 }
 function renameNextDirectory() {
     return __awaiter(this, void 0, void 0, function* () {
-        const oldPath = path.resolve('nextension', '_next');
-        const newPath = path.resolve('nextension', 'next');
+        const oldPath = path.resolve(process.cwd(), 'nextension', '_next');
+        const newPath = path.resolve(process.cwd(), 'nextension', 'next');
         try {
             yield fs.rename(oldPath, newPath);
-            (0, utils_1.log)(`Successfully renamed directory from ${oldPath} to ${newPath}`, 'success');
+            (0, utils_1.log)(`Renamed directory from ${path.basename(oldPath)} to ${path.basename(newPath)}`, 'highlight');
         }
         catch (error) {
-            (0, utils_1.log)(`Error renaming directory from ${oldPath} to ${newPath}:`, 'error');
+            (0, utils_1.log)(`Error renaming directory from ${path.basename(oldPath)} to ${path.basename(newPath)}:`, 'error');
             throw error;
         }
     });
@@ -121,7 +164,7 @@ function updateHtmlFiles() {
                 content = yield formatHTML(content);
                 yield fs.writeFile(file, content, 'utf8');
             }
-            (0, utils_1.log)('Successfully updated HTML files', 'success');
+            (0, utils_1.log)('Updated HTML files', 'highlight');
         }
         catch (error) {
             (0, utils_1.log)('Error updating HTML files:', 'error');
@@ -134,8 +177,13 @@ function copyAssets() {
         const srcPath = path.resolve('assets');
         const destPath = path.resolve('nextension', 'assets');
         try {
-            yield fs.copy(srcPath, destPath);
-            (0, utils_1.log)('Successfully copied assets', 'success');
+            if (yield fs.pathExists(srcPath)) {
+                yield fs.copy(srcPath, destPath);
+                (0, utils_1.log)('Copied assets', 'highlight');
+            }
+            else {
+                (0, utils_1.log)('Assets directory does not exist, skipping copy operation', 'info');
+            }
         }
         catch (error) {
             (0, utils_1.log)(`Error copying assets from ${srcPath} to ${destPath}:`, 'error');
@@ -145,7 +193,7 @@ function copyAssets() {
 }
 function checkManifest() {
     return __awaiter(this, void 0, void 0, function* () {
-        const manifestPath = path.resolve('nextension', 'assets', 'manifest.json');
+        const manifestPath = path.resolve('nextension', 'manifest.json');
         try {
             const manifestExists = yield fs.pathExists(manifestPath);
             if (!manifestExists) {
@@ -163,7 +211,7 @@ function checkManifest() {
             }
         }
         catch (error) {
-            (0, utils_1.log)('Successfully checked manifest.json', 'success');
+            (0, utils_1.log)('Error checking manifest.json', 'error');
             throw error;
         }
     });
@@ -213,18 +261,58 @@ function generateManifest() {
             } : undefined });
         const manifestPath = path.resolve('nextension', 'assets', 'manifest.json');
         yield fs.writeJson(manifestPath, manifestContent, { spaces: 2 });
-        (0, utils_1.log)('Successfully generated manifest.json', 'success');
+        (0, utils_1.log)('Generated manifest.json', 'highlight');
+    });
+}
+function organizeFiles() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const nextensionPath = path.resolve(process.cwd(), 'nextension');
+        const directories = {
+            '.js': 'scripts',
+            '.css': 'styles',
+            '.png': 'icons',
+            '.jpg': 'icons',
+            '.ico': 'icons',
+            '.svg': 'icons',
+            '.html': 'html'
+        };
+        for (const dir of Object.values(directories)) {
+            yield fs.mkdir(path.join(nextensionPath, dir), { recursive: true });
+        }
+        for (const [ext, dir] of Object.entries(directories)) {
+            const files = glob.sync(path.join(nextensionPath, `*${ext}`));
+            for (const file of files) {
+                if (path.basename(file).startsWith('popup')) {
+                    yield fs.move(file, path.join(nextensionPath, 'popup', path.basename(file)));
+                }
+                else {
+                    yield fs.move(file, path.join(nextensionPath, dir, path.basename(file)));
+                }
+            }
+        }
+        (0, utils_1.log)('Organized files', 'highlight');
     });
 }
 function build() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
+            yield (0, utils_1.initialize)();
+            (0, utils_1.log)('Initiating build process...', 'highlight');
+            yield ensureScriptsInPackageJson();
+            (0, utils_1.log)('\u2714 Validated presence of required scripts in package.json', 'success');
             yield runNextBuildAndExport();
+            (0, utils_1.log)('\u2714 Next.js build and export process completed', 'success');
             yield renameNextDirectory();
+            (0, utils_1.log)('\u2714 Renamed _next directory to next for compatibility', 'success');
             yield updateHtmlFiles();
+            (0, utils_1.log)('\u2714 HTML files have been updated to reference new directory structure', 'success');
             yield copyAssets();
+            (0, utils_1.log)('\u2714 Assets have been copied to the target directory', 'success');
             yield checkManifest();
-            (0, utils_1.log)('Build completed successfully', 'success');
+            (0, utils_1.log)('\u2714 Manifest.json file checked, and generated if not present', 'success');
+            yield organizeFiles();
+            (0, utils_1.log)('\u2714 Files organized into a cleaner directory structure', 'success');
+            (0, utils_1.log)('\u2714 Build process completed successfully', 'success');
         }
         catch (error) {
             (0, utils_1.log)('An error occurred during the build process:', 'error');

@@ -17,6 +17,13 @@ yargs(hideBin(process.argv))
         }
         build();
     })
+    .command('*', 'default', () => {}, (argv) => {
+        if (argv.verbose) {
+            console.log('Verbose mode is on.');
+        }
+        build();
+    }) // Set a default command
+    .demandCommand(0, 0) // This allows for 0 commands
     .help()
     .alias('help', 'h')
     .argv;
