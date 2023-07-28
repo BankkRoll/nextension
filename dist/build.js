@@ -1,27 +1,4 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -36,19 +13,31 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.build = void 0;
-const fs = __importStar(require("fs-extra"));
-const glob = __importStar(require("glob"));
-const path = __importStar(require("path"));
+const fs_extra_1 = __importDefault(require("fs-extra"));
+const glob_1 = __importDefault(require("glob"));
+const path_1 = __importDefault(require("path"));
 const child_process_1 = require("child_process");
 const js_beautify_1 = require("js-beautify");
 const inquirer_1 = __importDefault(require("inquirer"));
 const utils_1 = require("./utils");
 function executeCommand(command) {
     return __awaiter(this, void 0, void 0, function* () {
-        const yarnLockExists = yield fs.pathExists('yarn.lock');
-        const pnpmLockExists = yield fs.pathExists('pnpm-lock.yaml');
+        const yarnLockExists = yield fs_extra_1.default.pathExists('yarn.lock');
+        const pnpmLockExists = yield fs_extra_1.default.pathExists('pnpm-lock.yaml');
         let packageManagerCommand = 'npm run';
-        if (yarnLockExists) {
+        if (yarnLockExists && pnpmLockExists) {
+            const { chosenPackageManager } = yield inquirer_1.default.prompt([
+                {
+                    type: 'list',
+                    name: 'chosenPackageManager',
+                    message: 'Both yarn.lock and pnpm-lock.yaml detected, please choose your package manager:',
+                    choices: ['npm', 'yarn', 'pnpm'],
+                    default: 'npm'
+                }
+            ]);
+            packageManagerCommand = chosenPackageManager;
+        }
+        else if (yarnLockExists) {
             packageManagerCommand = 'yarn';
         }
         else if (pnpmLockExists) {
@@ -58,21 +47,14 @@ function executeCommand(command) {
         const spinner = (0, utils_1.createSpinner)(`Initiating protocol: ${fullCommand}`);
         return new Promise((resolve, reject) => {
             (0, child_process_1.exec)(fullCommand, { timeout: 60000 }, (error, stdout, stderr) => {
+                (0, utils_1.stopSpinner)(spinner);
                 if (error) {
-                    (0, utils_1.log)(`Error during command execution '${fullCommand}': ${error}`, 'error', spinner);
-                    (0, utils_1.log)(`stdout: ${stdout}`, 'info', spinner);
-                    (0, utils_1.log)(`stderr: ${stderr}`, 'info', spinner);
-                    (0, utils_1.log)(`Error code: ${error.code}`, 'info', spinner);
-                    (0, utils_1.log)(`Error signal: ${error.signal}`, 'info', spinner);
-                    (0, utils_1.log)(`Error message: ${error.message}`, 'info', spinner);
                     reject((0, utils_1.createError)('CMD_EXEC_ERROR', `Error during command execution '${fullCommand}': ${error}`));
                 }
                 else if (stderr) {
-                    (0, utils_1.log)(`stderr during command execution '${fullCommand}': ${stderr}`, 'error', spinner);
                     reject((0, utils_1.createError)('CMD_EXEC_STDERR', `stderr during command execution '${fullCommand}': ${stderr}`));
                 }
                 else {
-                    (0, utils_1.stopSpinner)(spinner);
                     resolve(stdout);
                 }
             });
@@ -81,8 +63,8 @@ function executeCommand(command) {
 }
 function ensureScriptsInPackageJson() {
     return __awaiter(this, void 0, void 0, function* () {
-        const packageJsonPath = path.resolve('package.json');
-        const packageJson = yield fs.readJson(packageJsonPath);
+        const packageJsonPath = path_1.default.resolve('package.json');
+        const packageJson = yield fs_extra_1.default.readJson(packageJsonPath);
         if (!packageJson.scripts) {
             packageJson.scripts = {};
         }
@@ -94,7 +76,7 @@ function ensureScriptsInPackageJson() {
             packageJson.scripts.export = 'next export';
             (0, utils_1.log)('Adding `export` script to package.json', 'highlight');
         }
-        yield fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
+        yield fs_extra_1.default.writeJson(packageJsonPath, packageJson, { spaces: 2 });
     });
 }
 function runNextBuildAndExport() {
@@ -102,10 +84,10 @@ function runNextBuildAndExport() {
         try {
             (0, utils_1.log)('Running `next build`...', 'info');
             yield executeCommand('build');
-            const outPath = path.join(process.cwd(), 'out');
-            const exists = yield fs.pathExists(outPath);
+            const outPath = path_1.default.join(process.cwd(), 'out');
+            const exists = yield fs_extra_1.default.pathExists(outPath);
             (0, utils_1.log)(`\nout directory exists: ${exists}`, 'info');
-            yield fs.move(outPath, path.join(process.cwd(), 'nextension'));
+            yield fs_extra_1.default.move(outPath, path_1.default.join(process.cwd(), 'nextension'));
             (0, utils_1.log)(`Moved 'out' directory to 'nextension'`, 'highlight');
         }
         catch (error) {
@@ -123,14 +105,14 @@ function runNextBuildAndExport() {
 }
 function renameNextDirectory() {
     return __awaiter(this, void 0, void 0, function* () {
-        const oldPath = path.resolve(process.cwd(), 'nextension', '_next');
-        const newPath = path.resolve(process.cwd(), 'nextension', 'next');
+        const oldPath = path_1.default.resolve(process.cwd(), 'nextension', '_next');
+        const newPath = path_1.default.resolve(process.cwd(), 'nextension', 'next');
         try {
-            yield fs.rename(oldPath, newPath);
-            (0, utils_1.log)(`Renamed directory from ${path.basename(oldPath)} to ${path.basename(newPath)}`, 'highlight');
+            yield fs_extra_1.default.rename(oldPath, newPath);
+            (0, utils_1.log)(`Renamed directory from ${path_1.default.basename(oldPath)} to ${path_1.default.basename(newPath)}`, 'highlight');
         }
         catch (error) {
-            (0, utils_1.log)(`Error renaming directory from ${path.basename(oldPath)} to ${path.basename(newPath)}:`, 'error');
+            (0, utils_1.log)(`Error renaming directory from ${path_1.default.basename(oldPath)} to ${path_1.default.basename(newPath)}:`, 'error');
             throw error;
         }
     });
@@ -156,13 +138,13 @@ function formatHTML(html) {
 }
 function updateHtmlFiles() {
     return __awaiter(this, void 0, void 0, function* () {
-        const htmlFiles = glob.sync('nextension/**/*.html');
+        const htmlFiles = glob_1.default.sync('nextension/**/*.html');
         try {
             for (const file of htmlFiles) {
-                let content = yield fs.readFile(file, 'utf8');
+                let content = yield fs_extra_1.default.readFile(file, 'utf8');
                 content = content.replace(/\/_next\//g, '/next/');
                 content = yield formatHTML(content);
-                yield fs.writeFile(file, content, 'utf8');
+                yield fs_extra_1.default.writeFile(file, content, 'utf8');
             }
             (0, utils_1.log)('Updated HTML files', 'highlight');
         }
@@ -174,11 +156,11 @@ function updateHtmlFiles() {
 }
 function copyAssets() {
     return __awaiter(this, void 0, void 0, function* () {
-        const srcPath = path.resolve('assets');
-        const destPath = path.resolve('nextension', 'assets');
+        const srcPath = path_1.default.resolve('assets');
+        const destPath = path_1.default.resolve('nextension', 'assets');
         try {
-            if (yield fs.pathExists(srcPath)) {
-                yield fs.copy(srcPath, destPath);
+            if (yield fs_extra_1.default.pathExists(srcPath)) {
+                yield fs_extra_1.default.copy(srcPath, destPath);
                 (0, utils_1.log)('Copied assets', 'highlight');
             }
             else {
@@ -191,23 +173,13 @@ function copyAssets() {
         }
     });
 }
-function checkManifest() {
+function checkManifest(options) {
     return __awaiter(this, void 0, void 0, function* () {
-        const manifestPath = path.resolve('nextension', 'manifest.json');
+        const manifestPath = path_1.default.resolve('nextension', 'manifest.json');
         try {
-            const manifestExists = yield fs.pathExists(manifestPath);
-            if (!manifestExists) {
-                const { generate } = yield inquirer_1.default.prompt([
-                    {
-                        type: 'confirm',
-                        name: 'generate',
-                        message: 'manifest.json not found. Would you like to generate a template?',
-                        default: false
-                    }
-                ]);
-                if (generate) {
-                    yield generateManifest();
-                }
+            const manifestExists = yield fs_extra_1.default.pathExists(manifestPath);
+            if (!manifestExists && options.generateManifest) {
+                yield generateManifest();
             }
         }
         catch (error) {
@@ -218,11 +190,11 @@ function checkManifest() {
 }
 function generateManifest() {
     return __awaiter(this, void 0, void 0, function* () {
-        const assetsDir = path.resolve('public');
-        const defaultPopupExists = yield fs.pathExists(path.join(assetsDir, 'popup.html'));
-        const contentScriptExists = yield fs.pathExists(path.join(assetsDir, 'content.js'));
-        const backgroundScriptExists = yield fs.pathExists(path.join(assetsDir, 'background.js'));
-        const iconsExist = yield fs.pathExists(path.join(assetsDir, 'icons'));
+        const assetsDir = path_1.default.resolve('public');
+        const defaultPopupExists = yield fs_extra_1.default.pathExists(path_1.default.join(assetsDir, 'popup.html'));
+        const contentScriptExists = yield fs_extra_1.default.pathExists(path_1.default.join(assetsDir, 'content.js'));
+        const backgroundScriptExists = yield fs_extra_1.default.pathExists(path_1.default.join(assetsDir, 'background.js'));
+        const iconsExist = yield fs_extra_1.default.pathExists(path_1.default.join(assetsDir, 'icons'));
         const questions = [
             {
                 type: 'input',
@@ -259,14 +231,14 @@ function generateManifest() {
                 '48': 'icons/icon48.png',
                 '128': 'icons/icon128.png',
             } : undefined });
-        const manifestPath = path.resolve('nextension', 'assets', 'manifest.json');
-        yield fs.writeJson(manifestPath, manifestContent, { spaces: 2 });
+        const manifestPath = path_1.default.resolve('nextension', 'assets', 'manifest.json');
+        yield fs_extra_1.default.writeJson(manifestPath, manifestContent, { spaces: 2 });
         (0, utils_1.log)('Generated manifest.json', 'highlight');
     });
 }
 function organizeFiles() {
     return __awaiter(this, void 0, void 0, function* () {
-        const nextensionPath = path.resolve(process.cwd(), 'nextension');
+        const nextensionPath = path_1.default.resolve(process.cwd(), 'nextension');
         const directories = {
             '.js': 'scripts',
             '.css': 'styles',
@@ -277,26 +249,116 @@ function organizeFiles() {
             '.html': 'html'
         };
         for (const dir of Object.values(directories)) {
-            yield fs.mkdir(path.join(nextensionPath, dir), { recursive: true });
+            yield fs_extra_1.default.mkdir(path_1.default.join(nextensionPath, dir), { recursive: true });
         }
         for (const [ext, dir] of Object.entries(directories)) {
-            const files = glob.sync(path.join(nextensionPath, `*${ext}`));
+            const files = glob_1.default.sync(path_1.default.join(nextensionPath, `*${ext}`));
             for (const file of files) {
-                if (path.basename(file).startsWith('popup')) {
-                    yield fs.move(file, path.join(nextensionPath, 'popup', path.basename(file)));
+                if (path_1.default.basename(file).startsWith('popup')) {
+                    yield fs_extra_1.default.move(file, path_1.default.join(nextensionPath, 'popup', path_1.default.basename(file)));
                 }
                 else {
-                    yield fs.move(file, path.join(nextensionPath, dir, path.basename(file)));
+                    yield fs_extra_1.default.move(file, path_1.default.join(nextensionPath, dir, path_1.default.basename(file)));
                 }
             }
         }
         (0, utils_1.log)('Organized files', 'highlight');
     });
 }
-function build() {
+function generateBackgroundScript() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const scriptContent = `
+        // Background Service Worker
+        self.addEventListener('install', function(event) {
+            console.log('[Service Worker] Installing Service Worker ...', event);
+        });
+
+        self.addEventListener('activate', function(event) {
+            console.log('[Service Worker] Activating Service Worker ...', event);
+            return self.clients.claim();
+        });
+
+        self.addEventListener('fetch', function(event) {
+            console.log('[Service Worker] Fetching something ...', event);
+            event.respondWith(fetch(event.request));
+        });
+    `;
+        const scriptPath = path_1.default.resolve('nextension', 'background.js');
+        yield fs_extra_1.default.writeFile(scriptPath, scriptContent, 'utf8');
+    });
+}
+function generateContentScript() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const scriptContent = `
+        // Content Script
+        console.log('Content script has loaded via Nextension.');
+    `;
+        const scriptPath = path_1.default.resolve('nextension', 'content.js');
+        yield fs_extra_1.default.writeFile(scriptPath, scriptContent, 'utf8');
+    });
+}
+function generatePopupScript() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const scriptContent = `
+        // Popup Script
+        console.log('Popup script has loaded via Nextension.');
+    `;
+        const scriptPath = path_1.default.resolve('nextension', 'popup.js');
+        yield fs_extra_1.default.writeFile(scriptPath, scriptContent, 'utf8');
+        const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Nextension Popup</title>
+            <script src="popup.js"></script>
+        </head>
+        <body>
+            <h1>Nextension Popup</h1>
+        </body>
+        </html>
+    `;
+        const htmlPath = path_1.default.resolve('nextension', 'popup.html');
+        yield fs_extra_1.default.writeFile(htmlPath, htmlContent, 'utf8');
+    });
+}
+function generateOptionsScript() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const scriptContent = `
+        // Options Script
+        console.log('Options script has loaded via Nextension.');
+    `;
+        const scriptPath = path_1.default.resolve('nextension', 'options.js');
+        yield fs_extra_1.default.writeFile(scriptPath, scriptContent, 'utf8');
+        const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Nextension Options</title>
+            <script src="options.js"></script>
+        </head>
+        <body>
+            <h1>Nextension Options</h1>
+        </body>
+        </html>
+    `;
+        const htmlPath = path_1.default.resolve('nextension', 'options.html');
+        yield fs_extra_1.default.writeFile(htmlPath, htmlContent, 'utf8');
+    });
+}
+function generateActionScript() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const scriptContent = `
+        // Action Script
+        console.log('Action script has loaded via Nextension.');
+    `;
+        const scriptPath = path_1.default.resolve('nextension', 'action.js');
+        yield fs_extra_1.default.writeFile(scriptPath, scriptContent, 'utf8');
+    });
+}
+function build(options) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            yield (0, utils_1.initialize)();
+            yield (0, utils_1.initialize)(options);
             (0, utils_1.log)('Initiating build process...', 'highlight');
             yield ensureScriptsInPackageJson();
             (0, utils_1.log)('\u2714 Validated presence of required scripts in package.json', 'success');
@@ -306,10 +368,34 @@ function build() {
             (0, utils_1.log)('\u2714 Renamed _next directory to next for compatibility', 'success');
             yield updateHtmlFiles();
             (0, utils_1.log)('\u2714 HTML files have been updated to reference new directory structure', 'success');
-            yield copyAssets();
-            (0, utils_1.log)('\u2714 Assets have been copied to the target directory', 'success');
-            yield checkManifest();
-            (0, utils_1.log)('\u2714 Manifest.json file checked, and generated if not present', 'success');
+            if (options.generateManifest || options.generateBackground || options.generateContent || options.generatePopup || options.generateOptions || options.generateAction) {
+                yield copyAssets();
+                (0, utils_1.log)('\u2714 Assets have been copied to the target directory', 'success');
+            }
+            if (options.generateBackground) {
+                yield generateBackgroundScript();
+                (0, utils_1.log)('\u2714 Generated background script file', 'success');
+            }
+            if (options.generateContent) {
+                yield generateContentScript();
+                (0, utils_1.log)('\u2714 Generated content script file', 'success');
+            }
+            if (options.generatePopup) {
+                yield generatePopupScript();
+                (0, utils_1.log)('\u2714 Generated popup script file', 'success');
+            }
+            if (options.generateOptions) {
+                yield generateOptionsScript();
+                (0, utils_1.log)('\u2714 Generated options script file', 'success');
+            }
+            if (options.generateAction) {
+                yield generateActionScript();
+                (0, utils_1.log)('\u2714 Generated action script file', 'success');
+            }
+            if (options.generateManifest) {
+                yield checkManifest(options);
+                (0, utils_1.log)('\u2714 Manifest.json file checked, and generated if not present', 'success');
+            }
             yield organizeFiles();
             (0, utils_1.log)('\u2714 Files organized into a cleaner directory structure', 'success');
             (0, utils_1.log)('\u2714 Build process completed successfully', 'success');

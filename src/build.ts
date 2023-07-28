@@ -1,21 +1,49 @@
-import * as fs from 'fs-extra';
-import * as glob from 'glob';
-import * as path from 'path';
+import fs from 'fs-extra';
+import glob from 'glob';
+import path from 'path';
 import { exec } from 'child_process';
 import { html as beautifyHTML } from 'js-beautify';
 import inquirer from 'inquirer';
-import { log, createSpinner, stopSpinner, createError, initialize } from './utils';
 
+import { 
+  log,
+  createSpinner,
+  stopSpinner,
+  createError,
+  initialize 
+} from './utils';
+
+interface BuildOptions {
+    verbose?: boolean;
+    generateManifest?: boolean;
+    generateBackground?: boolean;
+    generateContent?: boolean;
+    generatePopup?: boolean;
+    generateOptions?: boolean;
+    generateAction?: boolean;
+}
 
 /**
  * Executes a command in the package.json file and returns the output.
+ * Now checking for both yarn.lock and pnpm-lock.yaml, if both exist, user is prompted to choose.
  */
 async function executeCommand(command: string) {
     const yarnLockExists = await fs.pathExists('yarn.lock');
     const pnpmLockExists = await fs.pathExists('pnpm-lock.yaml');
     let packageManagerCommand = 'npm run';
 
-    if (yarnLockExists) {
+    if (yarnLockExists && pnpmLockExists) {
+        const { chosenPackageManager } = await inquirer.prompt([
+            {
+                type: 'list',
+                name: 'chosenPackageManager',
+                message: 'Both yarn.lock and pnpm-lock.yaml detected, please choose your package manager:',
+                choices: ['npm', 'yarn', 'pnpm'],
+                default: 'npm'
+            }
+        ]);
+        packageManagerCommand = chosenPackageManager;
+    } else if (yarnLockExists) {
         packageManagerCommand = 'yarn';
     } else if (pnpmLockExists) {
         packageManagerCommand = 'pnpm';
@@ -25,24 +53,18 @@ async function executeCommand(command: string) {
     const spinner = createSpinner(`Initiating protocol: ${fullCommand}`);
     return new Promise((resolve, reject) => {
         exec(fullCommand, {timeout: 60000}, (error, stdout, stderr) => {
+            stopSpinner(spinner);
             if (error) {
-                log(`Error during command execution '${fullCommand}': ${error}`, 'error', spinner);
-                log(`stdout: ${stdout}`, 'info', spinner);
-                log(`stderr: ${stderr}`, 'info', spinner);
-                log(`Error code: ${error.code}`, 'info', spinner);
-                log(`Error signal: ${error.signal}`, 'info', spinner);
-                log(`Error message: ${error.message}`, 'info', spinner);
                 reject(createError('CMD_EXEC_ERROR', `Error during command execution '${fullCommand}': ${error}`));
             } else if (stderr) {
-                log(`stderr during command execution '${fullCommand}': ${stderr}`, 'error', spinner);
                 reject(createError('CMD_EXEC_STDERR', `stderr during command execution '${fullCommand}': ${stderr}`));
             } else {
-                stopSpinner(spinner);
                 resolve(stdout);
             }
         });
     });
 }
+
 
 /**
  * Creates a build and export script in the package.json file.
@@ -180,25 +202,14 @@ async function copyAssets() {
  * Checks for the presence of manifest.json in the assets directory.
  * If not present, prompts the user to generate a template.
  */
-async function checkManifest() {
+async function checkManifest(options: BuildOptions) {
     const manifestPath = path.resolve('nextension', 'manifest.json');
 
     try {
         const manifestExists = await fs.pathExists(manifestPath);
 
-        if (!manifestExists) {
-            const { generate } = await inquirer.prompt([
-                {
-                    type: 'confirm',
-                    name: 'generate',
-                    message: 'manifest.json not found. Would you like to generate a template?',
-                    default: false
-                }
-            ]);
-
-            if (generate) {
-                await generateManifest();
-            }
+        if (!manifestExists && options.generateManifest) {
+            await generateManifest();
         }
     } catch (error) {
         log('Error checking manifest.json', 'error');
@@ -303,12 +314,121 @@ async function organizeFiles() {
 }
 
 /**
+ * Generate a background service worker script file.
+ */
+async function generateBackgroundScript() {
+    const scriptContent = `
+        // Background Service Worker
+        self.addEventListener('install', function(event) {
+            console.log('[Service Worker] Installing Service Worker ...', event);
+        });
+
+        self.addEventListener('activate', function(event) {
+            console.log('[Service Worker] Activating Service Worker ...', event);
+            return self.clients.claim();
+        });
+
+        self.addEventListener('fetch', function(event) {
+            console.log('[Service Worker] Fetching something ...', event);
+            event.respondWith(fetch(event.request));
+        });
+    `;
+
+    const scriptPath = path.resolve('nextension', 'background.js');
+    await fs.writeFile(scriptPath, scriptContent, 'utf8');
+}
+
+/**
+ * Generate a content script file.
+ */
+async function generateContentScript() {
+    const scriptContent = `
+        // Content Script
+        console.log('Content script has loaded via Nextension.');
+    `;
+
+    const scriptPath = path.resolve('nextension', 'content.js');
+    await fs.writeFile(scriptPath, scriptContent, 'utf8');
+}
+
+/**
+ * Generate a popup script and HTML file.
+ */
+async function generatePopupScript() {
+    const scriptContent = `
+        // Popup Script
+        console.log('Popup script has loaded via Nextension.');
+    `;
+
+    const scriptPath = path.resolve('nextension', 'popup.js');
+    await fs.writeFile(scriptPath, scriptContent, 'utf8');
+
+    const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Nextension Popup</title>
+            <script src="popup.js"></script>
+        </head>
+        <body>
+            <h1>Nextension Popup</h1>
+        </body>
+        </html>
+    `;
+
+    const htmlPath = path.resolve('nextension', 'popup.html');
+    await fs.writeFile(htmlPath, htmlContent, 'utf8');
+}
+
+/**
+ * Generate an options script and HTML file.
+ */
+async function generateOptionsScript() {
+    const scriptContent = `
+        // Options Script
+        console.log('Options script has loaded via Nextension.');
+    `;
+
+    const scriptPath = path.resolve('nextension', 'options.js');
+    await fs.writeFile(scriptPath, scriptContent, 'utf8');
+
+    const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Nextension Options</title>
+            <script src="options.js"></script>
+        </head>
+        <body>
+            <h1>Nextension Options</h1>
+        </body>
+        </html>
+    `;
+
+    const htmlPath = path.resolve('nextension', 'options.html');
+    await fs.writeFile(htmlPath, htmlContent, 'utf8');
+}
+
+/**
+ * Generate an action script file.
+ */
+async function generateActionScript() {
+    const scriptContent = `
+        // Action Script
+        console.log('Action script has loaded via Nextension.');
+    `;
+
+    const scriptPath = path.resolve('nextension', 'action.js');
+    await fs.writeFile(scriptPath, scriptContent, 'utf8');
+}
+
+/**
  * Main function.
  * Runs the build and export commands, renames the directory, updates HTML files, copies assets, checks for manifest.json, and organizes files.
  */
-export async function build() {
+export async function build(options: BuildOptions) {
     try {
-        await initialize();
+        await initialize(options);
         log('Initiating build process...', 'highlight');
         await ensureScriptsInPackageJson();
         log('\u2714 Validated presence of required scripts in package.json', 'success');
@@ -318,10 +438,44 @@ export async function build() {
         log('\u2714 Renamed _next directory to next for compatibility', 'success');
         await updateHtmlFiles();
         log('\u2714 HTML files have been updated to reference new directory structure', 'success');
-        await copyAssets();
-        log('\u2714 Assets have been copied to the target directory', 'success');
-        await checkManifest();
-        log('\u2714 Manifest.json file checked, and generated if not present', 'success');
+
+        // Only copy assets if a specific build option is enabled
+        if (options.generateManifest || options.generateBackground || options.generateContent || options.generatePopup || options.generateOptions || options.generateAction) {
+            await copyAssets();
+            log('\u2714 Assets have been copied to the target directory', 'success');
+        }
+
+        if (options.generateBackground) {
+            await generateBackgroundScript();
+            log('\u2714 Generated background script file', 'success');
+        }
+
+        if (options.generateContent) {
+            await generateContentScript();
+            log('\u2714 Generated content script file', 'success');
+        }
+
+        if (options.generatePopup) {
+            await generatePopupScript();
+            log('\u2714 Generated popup script file', 'success');
+        }
+
+        if (options.generateOptions) {
+            await generateOptionsScript();
+            log('\u2714 Generated options script file', 'success');
+        }
+
+        if (options.generateAction) {
+            await generateActionScript();
+            log('\u2714 Generated action script file', 'success');
+        }
+
+        // Only generate the manifest if the corresponding option is enabled
+        if (options.generateManifest) {
+            await checkManifest(options);
+            log('\u2714 Manifest.json file checked, and generated if not present', 'success');
+        }
+
         await organizeFiles();
         log('\u2714 Files organized into a cleaner directory structure', 'success');
         log('\u2714 Build process completed successfully', 'success');

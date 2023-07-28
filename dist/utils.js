@@ -39,8 +39,11 @@ exports.initialize = exports.pressAnyKeyToContinue = exports.clearConsole = expo
 let kleur;
 let cliSpinners;
 const readline_1 = __importDefault(require("readline"));
-function initialize() {
+let verbose = false;
+function initialize(options) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
+        verbose = (_a = options.verbose) !== null && _a !== void 0 ? _a : false;
         const importPromises = [
             Promise.resolve().then(() => __importStar(require('kleur'))).then((kleurModule) => kleur = kleurModule),
             Promise.resolve().then(() => __importStar(require('cli-spinners'))).then((cliSpinnersModule) => cliSpinners = cliSpinnersModule),
@@ -68,6 +71,9 @@ function createError(code, message) {
 exports.createError = createError;
 let frameIndex = 0;
 function log(message, type = 'info', spinner) {
+    if (!verbose && type === 'info') {
+        return;
+    }
     const timestamp = new Date().toLocaleTimeString();
     const largeSpinnerFrame = cliSpinners.dots.frames[frameIndex] + ' ' + cliSpinners.dots.frames[frameIndex] + ' ' + cliSpinners.dots.frames[frameIndex];
     switch (type) {

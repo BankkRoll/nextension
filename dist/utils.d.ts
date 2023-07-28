@@ -1,5 +1,7 @@
 /// <reference types="node" />
-declare function initialize(): Promise<void>;
+declare function initialize(options: {
+    verbose?: boolean;
+}): Promise<void>;
 declare class CustomError extends Error {
     code: string;
     message: string;

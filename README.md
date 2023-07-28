@@ -6,38 +6,18 @@
 ## Table of Contents
 
 1. [Introduction](#introduction)
-2. [Installation and Usage](#installation-and-usage)
-3. [Features](#features)
-4. [File Structure](#file-structure)
-5. [Troubleshooting](#troubleshooting)
-6. [Contributing](#contributing)
-7. [License](#license)
+2. [Features](#features)
+3. [Installation and Usage](#installation-and-usage)
+4. [Command Line Options](#command-line-options)
+5. [Examples](#examples)
+6. [File Structure](#file-structure)
+7. [Troubleshooting](#troubleshooting)
+8. [Contributing](#contributing)
+9. [License](#license)
 
 ## Introduction
 
 Nextension is an advanced CLI (Command Line Interface) tool designed for developers proficient in Next.js to easily convert their Next.js applications into fully functional Chrome extensions. With Nextension, developers can rapidly create Chrome extensions from their Next.js projects, enabling them to leverage the power of Next.js for building progressive web applications and taking advantage of the Chrome extension ecosystem for distribution.
-
-## Installation and Usage
-
-To install Nextension, ensure that you have Node.js version 14.0.0 or higher installed on your system, you can use the following command:
-
-To install nextension globally, allowing it to be run from any directory.
-
-```shell
-npm install -g nextension
-```
-
-To install nextension for a specific project:
-
-```shell
-npm install --save-dev nextension
-```
-
-After you've installed Nextension, you can run it in your project using the following command:
-
-```shell
-npx nextension
-```
 
 ## Features
 
@@ -50,6 +30,74 @@ Nextension is equipped with a variety of features to simplify the process of tra
 - **Package Manager Detection:** Automatically identifies your project's package manager (npm, yarn, or pnpm) and uses it to run the build commands.
 - **File Organization:** Arranges your files into specific directories like `scripts`, `styles`, and `icons`, resulting in a clean directory structure.
 - **Robust Error Handling:** Logs any issues encountered during the build process, assisting in troubleshooting.
+
+## Installation and Usage
+
+To install Nextension, ensure that you have Node.js version 14.0.0 or higher installed on your system.
+
+### Global Installation
+
+For global installation, use the following command:
+
+```shell
+npm install -g nextension
+```
+
+This allows you to run `nextension` from any directory:
+
+```shell
+nextension [options]
+```
+
+### Local Installation
+
+For local installation (specific to a project):
+
+```shell
+npm install --save-dev nextension
+```
+
+After you've installed Nextension, you can run it in your project using the following command:
+
+```shell
+npx nextension [options]
+```
+
+
+## Command Line Options
+
+| Option | Alias | Description |
+|--------|-------|-------------|
+| `--help` | `-h` | Run help command for options panel |
+| `--verbose` | `-v` | Run with verbose logging |
+| `--generate-manifest` | `-m` | Prompt to generate a manifest file if not present |
+| `--generate-background` | `-b` | Prompt to generate a background script if not present |
+| `--generate-content` | `-c` | Prompt to generate a content script if not present |
+| `--generate-popup` | `-p` | Prompt to generate a popup script and HTML if not present |
+| `--generate-options` | `-o` | Prompt to generate an options script and HTML if not present |
+| `--generate-action` | `-a` | Prompt to generate an action script if not present |
+
+## Examples
+
+To use Nextension with verbose logging:
+
+```shell
+nextension --verbose
+```
+
+```shell
+nextension -v
+```
+
+To generate a manifest file if not present:
+
+```shell
+nextension --generate-manifest
+```
+
+```shell
+nextension -m
+```
 
 ## File Structure
 
@@ -97,3 +145,5 @@ Nextension is open-source software released under the [MIT License](https://exam
 ---
 
 Thank you for choosing Nextension! We hope you find it a valuable tool for building powerful Chrome extensions with the ease and flexibility of Next.js. Happy coding!
+
+[Return to Top](#nextension)

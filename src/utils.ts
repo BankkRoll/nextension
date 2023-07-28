@@ -2,7 +2,11 @@ let kleur: any;
 let cliSpinners: any;
 import readline from 'readline';
 
-async function initialize() {
+let verbose = false;
+
+async function initialize(options: { verbose?: boolean }) {
+    verbose = options.verbose ?? false;
+
     const importPromises = [
         import('kleur').then((kleurModule) => kleur = kleurModule),
         import('cli-spinners').then((cliSpinnersModule) => cliSpinners = cliSpinnersModule),
@@ -29,6 +33,10 @@ let frameIndex = 0;
 type Spinner = NodeJS.Timeout;
 
 function log(message: string, type: 'info' | 'error' | 'warning' | 'spinner' | 'success' | 'highlight' = 'info', spinner?: Spinner) {
+    if (!verbose && type === 'info') {
+        return;
+    }
+
     const timestamp = new Date().toLocaleTimeString();
     const largeSpinnerFrame = cliSpinners.dots.frames[frameIndex] + ' ' + cliSpinners.dots.frames[frameIndex] + ' ' + cliSpinners.dots.frames[frameIndex];
     switch (type) {
