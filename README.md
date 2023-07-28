@@ -6,12 +6,10 @@
 1. [Introduction](#introduction)
 2. [Installation and Usage](#installation-and-usage)
 3. [Features](#features)
-4. [Customization](#customization)
-5. [Configuration](#configuration)
-6. [File Structure](#file-structure)
-7. [Troubleshooting](#troubleshooting)
-8. [Contributing](#contributing)
-9. [License](#license)
+4. [File Structure](#file-structure)
+5. [Troubleshooting](#troubleshooting)
+6. [Contributing](#contributing)
+7. [License](#license)
 
 ## Introduction
 
@@ -39,7 +37,6 @@ After you've installed Nextension, you can run it in your project using the foll
 npx nextension
 ```
 
-
 ## Features
 
 Nextension is equipped with a variety of features to simplify the process of transforming Next.js projects into Chrome extensions:
@@ -51,15 +48,6 @@ Nextension is equipped with a variety of features to simplify the process of tra
 - **Package Manager Detection:** Automatically identifies your project's package manager (npm, yarn, or pnpm) and uses it to run the build commands.
 - **File Organization:** Arranges your files into specific directories like `scripts`, `styles`, and `icons`, resulting in a clean directory structure.
 - **Robust Error Handling:** Logs any issues encountered during the build process, assisting in troubleshooting.
-
-## Customization
-
-Nextension allows you to customize various aspects of the Chrome extension generation process. You can modify the behavior of Nextension through configuration options.
-
-## Configuration
-#### Coming Soon...
-
-Nextension supports a configuration file named `nextension.config.js` in your project's root directory. By creating this file, you gain granular control over the Chrome extension's output.
 
 ## File Structure
 
