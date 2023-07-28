@@ -1,6 +1,6 @@
 {
   "name": "nextension",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "A CLI tool to build Next.js applications as Chrome extensions",
   "main": "dist/build.js",
   "bin": {
