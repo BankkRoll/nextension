@@ -21,10 +21,17 @@ function customHelp() {
         { command: '-o, --generate-options', description: 'Prompt to generate an options script and HTML if not present' },
         { command: '-a, --generate-action', description: 'Prompt to generate an action script if not present' },
     ];
-    const maxCommandLength = Math.max(...commands.map(cmd => cmd.command.length));
-    const maxDescriptionLength = Math.max(...commands.map(cmd => cmd.description.length));
-    const totalWidth = maxCommandLength + maxDescriptionLength + 3;
+    const bannerText = 'Globally use the command like: nextension [option] or if locally npx nextension [option]';
+    const longestCommand = Math.max(...commands.map(cmd => cmd.command.length));
+    const longestDescription = Math.max(...commands.map(cmd => cmd.description.length));
+    const totalWidth = Math.max(longestCommand + longestDescription + 3, bannerText.length + 2);
+    const maxCommandLength = longestCommand;
+    const maxDescriptionLength = totalWidth - maxCommandLength - 3;
     const horizontalLine = '+' + '-'.repeat(totalWidth) + '+';
+    console.log(horizontalLine);
+    console.log('|' + bannerText.padStart(totalWidth / 2 + bannerText.length / 2).padEnd(totalWidth) + '|');
+    console.log(horizontalLine);
+    console.log('|' + 'Option'.padEnd(maxCommandLength) + '|' + 'Description'.padEnd(maxDescriptionLength) + '|');
     console.log(horizontalLine);
     for (const cmd of commands) {
         console.log('|' + cmd.command.padEnd(maxCommandLength) + '|' + cmd.description.padEnd(maxDescriptionLength) + '|');
