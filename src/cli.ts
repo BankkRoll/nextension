@@ -21,18 +21,24 @@ initialize({ verbose: true });
 
 // Custom help command function
 function customHelp() {
-    const horizontalLine = '+' + '-'.repeat(boxWidth) + '+';
+    const commands = [
+        { command: 'build', description: 'Build the Next.js application' },
+        { command: '-v, --verbose', description: 'Run with verbose logging' },
+        { command: '-m, --generate-manifest', description: 'Prompt to generate a manifest file if not present' },
+        { command: '-b, --generate-background', description: 'Prompt to generate a background script if not present' },
+        { command: '-c, --generate-content', description: 'Prompt to generate a content script if not present' },
+        { command: '-p, --generate-popup', description: 'Prompt to generate a popup script and HTML if not present' },
+        { command: '-o, --generate-options', description: 'Prompt to generate an options script and HTML if not present' },
+        { command: '-a, --generate-action', description: 'Prompt to generate an action script if not present' },
+    ];
+    const maxCommandLength = Math.max(...commands.map(cmd => cmd.command.length));
+    const maxDescriptionLength = Math.max(...commands.map(cmd => cmd.description.length));
+    const totalWidth = maxCommandLength + maxDescriptionLength + 3;
+    const horizontalLine = '+' + '-'.repeat(totalWidth) + '+';
     console.log(horizontalLine);
-    console.log('|' + 'Command'.padEnd(20) + '|' + 'Description'.padEnd(boxWidth - 23) + '|');
-    console.log('|' + '-'.repeat(20) + '+' + '-'.repeat(boxWidth - 23) + '|');
-    console.log('|' + 'build'.padEnd(20) + '|' + 'Build the Next.js application'.padEnd(boxWidth - 23) + '|');
-    console.log('|' + '-v, --verbose'.padEnd(20) + '|' + 'Run with verbose logging'.padEnd(boxWidth - 23) + '|');
-    console.log('|' + '-m, --generate-manifest'.padEnd(20) + '|' + 'Prompt to generate a manifest file if not present'.padEnd(boxWidth - 23) + '|');
-    console.log('|' + '-b, --generate-background'.padEnd(20) + '|' + 'Prompt to generate a background script if not present'.padEnd(boxWidth - 23) + '|');
-    console.log('|' + '-c, --generate-content'.padEnd(20) + '|' + 'Prompt to generate a content script if not present'.padEnd(boxWidth - 23) + '|');
-    console.log('|' + '-p, --generate-popup'.padEnd(20) + '|' + 'Prompt to generate a popup script and HTML if not present'.padEnd(boxWidth - 23) + '|');
-    console.log('|' + '-o, --generate-options'.padEnd(20) + '|' + 'Prompt to generate an options script and HTML if not present'.padEnd(boxWidth - 23) + '|');
-    console.log('|' + '-a, --generate-action'.padEnd(20) + '|' + 'Prompt to generate an action script if not present'.padEnd(boxWidth - 23) + '|');
+    for (const cmd of commands) {
+        console.log('|' + cmd.command.padEnd(maxCommandLength) + '|' + cmd.description.padEnd(maxDescriptionLength) + '|');
+    }
     console.log(horizontalLine);
 }
 
