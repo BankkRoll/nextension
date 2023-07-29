@@ -15,27 +15,25 @@ interface BuildArgs {
 }
 
 const boxWidth = 60;
-const horizontalLine = '+' + '-'.repeat(boxWidth) + '+';
 
 // Initialize your utilities with verbose option
 initialize({ verbose: true });
 
 // Custom help command function
 function customHelp() {
-    log(horizontalLine, 'highlight');
-    log('|' + ' '.repeat(boxWidth) + '|', 'highlight');
-    log('|' + 'Nextension Help'.padStart(boxWidth / 2).padEnd(boxWidth) + '|', 'highlight');
-    log('|' + ' '.repeat(boxWidth) + '|', 'highlight');
-    log('|' + 'build: Build the Next.js application'.padStart(boxWidth - 2).padEnd(boxWidth) + '|', 'highlight');
-    log('|' + '-v, --verbose: Run with verbose logging'.padStart(boxWidth - 2).padEnd(boxWidth) + '|', 'highlight');
-    log('|' + '-m, --generate-manifest: Prompt to generate a manifest file if not present'.padStart(boxWidth - 2).padEnd(boxWidth) + '|', 'highlight');
-    log('|' + '-b, --generate-background: Prompt to generate a background script if not present'.padStart(boxWidth - 2).padEnd(boxWidth) + '|', 'highlight');
-    log('|' + '-c, --generate-content: Prompt to generate a content script if not present'.padStart(boxWidth - 2).padEnd(boxWidth) + '|', 'highlight');
-    log('|' + '-p, --generate-popup: Prompt to generate a popup script and HTML if not present'.padStart(boxWidth - 2).padEnd(boxWidth) + '|', 'highlight');
-    log('|' + '-o, --generate-options: Prompt to generate an options script and HTML if not present'.padStart(boxWidth - 2).padEnd(boxWidth) + '|', 'highlight');
-    log('|' + '-a, --generate-action: Prompt to generate an action script if not present'.padStart(boxWidth - 2).padEnd(boxWidth) + '|', 'highlight');
-    log('|' + ' '.repeat(boxWidth) + '|', 'highlight');
-    log(horizontalLine, 'highlight');
+    const horizontalLine = '+' + '-'.repeat(boxWidth) + '+';
+    console.log(horizontalLine);
+    console.log('|' + 'Command'.padEnd(20) + '|' + 'Description'.padEnd(boxWidth - 23) + '|');
+    console.log('|' + '-'.repeat(20) + '+' + '-'.repeat(boxWidth - 23) + '|');
+    console.log('|' + 'build'.padEnd(20) + '|' + 'Build the Next.js application'.padEnd(boxWidth - 23) + '|');
+    console.log('|' + '-v, --verbose'.padEnd(20) + '|' + 'Run with verbose logging'.padEnd(boxWidth - 23) + '|');
+    console.log('|' + '-m, --generate-manifest'.padEnd(20) + '|' + 'Prompt to generate a manifest file if not present'.padEnd(boxWidth - 23) + '|');
+    console.log('|' + '-b, --generate-background'.padEnd(20) + '|' + 'Prompt to generate a background script if not present'.padEnd(boxWidth - 23) + '|');
+    console.log('|' + '-c, --generate-content'.padEnd(20) + '|' + 'Prompt to generate a content script if not present'.padEnd(boxWidth - 23) + '|');
+    console.log('|' + '-p, --generate-popup'.padEnd(20) + '|' + 'Prompt to generate a popup script and HTML if not present'.padEnd(boxWidth - 23) + '|');
+    console.log('|' + '-o, --generate-options'.padEnd(20) + '|' + 'Prompt to generate an options script and HTML if not present'.padEnd(boxWidth - 23) + '|');
+    console.log('|' + '-a, --generate-action'.padEnd(20) + '|' + 'Prompt to generate an action script if not present'.padEnd(boxWidth - 23) + '|');
+    console.log(horizontalLine);
 }
 
 // Create the CLI application
